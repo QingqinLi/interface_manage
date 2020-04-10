@@ -1,0 +1,228 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<link>
+<meta http-equiv="content-type" charset="UTF-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Title</title>
+ <link rel="stylesheet" href="{% static 'plugin/bootstrap-3.3.7-dist/css/bootstrap.css' %}">
+<link rel="stylesheet" href="{% static 'plugin/sweetalert/sweetalert.css' %}">
+<script type="text/javascript" src="{% static 'plugin/sweetalert/sweetalert.min.js' %}"></script>
+{#<link rel="stylesheet" href="../static/plugin/bootstrap-3.3.7-dist/css/bootstrap.css">#}
+<script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+<script type="text/javascript" src="{% static 'plugin/bootstrap-3.3.7-dist/js/bootstrap.js'%}"></script>
+<style>
+    textarea {
+        resize: vertical;
+    }
+
+    .container {
+        margin-top: 20px;
+    }
+
+    .resultbox {
+        position: absolute;
+        background-color: #a6e1ec;
+    {#margin: 80px auto;#} float: left;
+        margin-top: 80px;
+    {#z-index: 999;#}{#opacity:0.5;#}
+    }
+
+    .msgbox {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: 30px auto;
+    {#z-index: -1;#}{#opacity: 0.5;#}
+
+    }
+
+    .sweetAlert {
+        width: 22em;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+        font-size: 10px;
+    }
+</style>
+
+</head>
+<body>
+
+<div class="panel panel-default container msgbox col-lg-10">
+    <div class="panel-heading">
+        <h3 class="panel-title">添加接口信息</h3>
+    </div>
+    <div class="panel-body col-lg-10">
+        <form class="form-horizontal" method="post" action="{% url 'interface_msg' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="interfaceName" class="col-sm-2 control-label">接口名称</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="interfaceName" placeholder="接口名称">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="interfaceDescribe" class="col-sm-2 control-label">用例描述</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="interfaceDescribe" placeholder="用例描述">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="interfaceUrl" class="col-sm-2 control-label">URL</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="interfaceUrl" placeholder="URL">
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="interfaceMethod" class="col-sm-2 control-label">请求方式</label>
+                <div class="col-sm-10">
+                    <select name="interfaceMethod" id="interfaceMethod" class="form-control">
+                        <option value="get" selected>GET</option>
+                        <option value="post">POST</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="interfaceData" class="col-sm-2 control-label">请求数据</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" rows="6" name="interfaceData"
+                              placeholder="请求数据（json格式的哦）"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="interfaceExcept" class="col-sm-2 control-label">期望</label>
+                <div class="col-sm-10">
+                    <select name="interfaceExcept" id="interfaceExcept" class="form-control">
+                        <option value="contains" selected>包含</option>
+                        <option value="equal">等于</option>
+                        <option value="notcontains">不包含</option>
+                        <option value="notequal">不等于</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="exceptContent" class="col-sm-2 control-label">期望内容</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" rows="4" name="exceptContent" placeholder="期望内容"></textarea>
+                </div>
+            </div>
+
+            {% if not response.code == 200 %}
+                <div class="form-group">
+                    <label for="exceptContent" class="col-sm-2 control-label" style="color: red"></label>
+                    <div class="col-sm-10">
+                        <label for="exceptContent" class="control-label has-error"
+                               style="color: red">{{ response.msg }}</label>
+                    </div>
+                </div>
+
+            {% endif %}
+
+            <div class="form-group">
+                <div class="col-sm-offset-11 col-sm-1">
+                    <button type="submit" id="validate" class="btn btn-primary">校验</button>
+                </div>
+            </div>
+        </form>
+
+
+    </div>
+
+</div>
+
+<!-- 隐藏浮动层展示结果 -->
+<div class="panel panel-default container hidden resultbox col-sm-6 col-xs-push-3">
+    <div class="panel-body">
+        <button class="col-lg-offset-12" id="resultConcell">X</button>
+
+        <form method="post" action="{% url 'interface_add' %}">
+            {% csrf_token %}
+
+            <textarea name="dbData" >{{ db_data }}</textarea>
+            <div class="form-group">
+                <label for="interfaceName" class="col-sm-2 control-label">接口名称</label>
+                <div class="col-sm-10">
+                    <label class="form-control">{{ response.data.interface_name }}</label>
+
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="interfaceDescribe" class="col-sm-2 control-label">请求方式</label>
+                <div class="col-sm-10">
+                    <label class="form-control">{{ response.data.request_method }}</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="interfaceUrl" class="col-sm-2 control-label">期望</label>
+                <div class="col-sm-10">
+                    <label class="form-control">{{ response.data.except_desc }}</label>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="interfaceMethod" class="col-sm-2 control-label">期望内容</label>
+                <div class="col-sm-10">
+                    <label class="form-control">{{ response.data.except_content }}</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="interfaceMethod" class="col-sm-2 control-label">校验结果</label>
+                <div class="col-sm-10">
+                    <label class="form-control">{{ response.data.result }}</label>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="interfaceData" class="col-sm-2 control-label">响应数据</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" rows="6"
+                              name="interfaceData">{{ response.data.response_data }}</textarea>
+                </div>
+            </div>
+
+
+            <button type="submit" class="btn btn- btn-primary" id="addInterface">提交</button>
+        </form>
+    </div>
+</div>
+
+
+</body>
+<script>
+
+    {% if response %}
+
+        {% if response.code == 200 %}
+            $(".resultbox").removeClass("hidden");
+            $(".msgbox").css("opacity", "0.2");
+        {% endif %}
+    {% else %}
+        $(".resultbox").addClass("hidden");
+        $(".msgbox").css("opacity", "1");
+    {% endif %}
+    $("#resultConcell").click(function () {
+        $(".resultbox").addClass("hidden");
+        $(".msgbox").css("opacity", "1");
+    });
+
+    {% if not response.data.result == 'success' %}
+        $("#addInterface").addClass("hidden");
+    {% endif %}
+</script>
+
+</html>
